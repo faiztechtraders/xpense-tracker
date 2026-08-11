@@ -1,0 +1,57 @@
+# CLAUDE.md
+
+Guidance for Claude Code (and any developer) working in this repository.
+
+## What this is
+
+ClaimTrack: a local-first, mobile-friendly Vite + React + TypeScript + Tailwind app for tracking corporate event/seminar travel allowances and general monthly expenses. **No backend, no external network calls, no AI/OCR APIs.** All persistence is client-side (IndexedDB + a small localStorage settings key). Keep it that way — do not introduce a server, third-party API calls, or cloud sync without an explicit user request.
+
+## Commands
+
+```bash
+npm run dev       # start dev server (localhost:5173, auto-increments on port conflict)
+npm run build     # tsc -b && vite build — must pass with zero type errors before considering a change done
+npm run lint      # oxlint
+npm run preview   # preview a production build
+```
+
+Run `npm run build` and `npm run lint` after any non-trivial change.
+
+## Architecture rules
+
+- **Storage split**: structured data (events, transactions, photos) lives entirely in IndexedDB (`src/db/`), accessed only through the repository functions in `src/db/repositories/`. Never read/write IndexedDB directly from a component or hook — always go through a repository. The **only** localStorage key is `claimtrack:ui-settings` (see `src/db/repositories/settingsRepo.ts`) — don't add more localStorage usage; put anything else in IndexedDB.
+- **Allowance is fixed, not top-uppable**: `TravelEvent.allowanceBudget` is a single amount set once at event creation. Every `EventTransaction` is a claim against it — there is no "allowance top-up" concept, and no `type` field on `EventTransaction`. Don't reintroduce one without an explicit request; `src/lib/balance.ts` relies on the allowance being constant for the whole event.
+- **Balance math lives in one place**: `src/lib/balance.ts`'s `computeEventBalance()` is the single source of truth for the Allowance / Total Claim / Balance Claim running calculation (`balanceClaim = event.allowanceBudget - cumulativeClaims`). It is a pure function called identically by the on-screen event view, the print view, and CSV export. Never duplicate or reimplement this math elsewhere — if the calculation needs to change, change it here and everything downstream stays in sync.
+- **Screen vs. print in `BalanceTable.tsx` are deliberately different views, not shared markup.** `variant="screen"` (used in `EventDetail`) is a plain amount-per-item card list, same at every breakpoint — no running balance per row, since the big Balance Claim figure above it already covers that; `variant="print"` renders the exact claim-sheet table (Date/Ref No/Description/Allowance/Total Claim/Balance Claim + Total row) for printing, CSV, and the on-screen print preview. Both read from the same `computeEventBalance()` output, so the *numbers* never drift, but don't try to unify the two into one table — a past version did that and users saw it as "a spreadsheet," plus a redundant running balance on every row. `PrintView.tsx` wraps the print table in a screen-only `overflow-x-auto` + `min-w-[560px]` container (cancelled via `print:` classes) so the on-screen preview stays usable on narrow phones without affecting the actual print/PDF output.
+- **`.force-light` (see `styles/index.css`) scopes the print preview to always render light**, independent of the dark mode toggle — `PrintView.tsx`'s `#print-root` carries this class. It does two things: excludes that subtree from the `dark:` Tailwind variant (via a `:not()` clause on the custom `dark` variant definition), and explicitly resets both `color-scheme` and `color`. Both resets are required — a real bug here: setting `color-scheme: dark` on `<html>` with no explicit `color` makes the browser default *unstyled* text to white at the root, and that resolved white then inherits normally into any subtree regardless of what `color-scheme` that subtree declares for itself (inheritance already carries a concrete value by then). Don't drop either half of this fix, and don't add new `dark:` classes inside `PrintView`'s print-root — they'd be silently excluded anyway and are dead code there.
+- **Every transaction carries a `month`** (`YYYY-MM`, derived from `date`), on both `EventTransaction` and `GeneralTransaction`. This is what lets `transactionsRepo.listByMonth()` fetch both kinds via a single `by-month` IndexedDB index for the unified monthly view. Always set `month: monthOf(date)` when creating or updating a transaction's date.
+- **Unified monthly view**: `useMonthlyActivity(month)` (`src/hooks/useMonthlyActivity.ts`) is the single place that merges personal (`GeneralTransaction`) and company-allowance (`EventTransaction`) spending for a month, joins in the event name, and computes `personalTotal` / `companyTotal` split from the combined `monthTotal`. If you need "everything spent this month," go through this hook rather than querying transactions directly.
+- **Claim categories**: `EventTransaction.claimCategory` (`'food' | 'transport'`, required — see `CLAIM_CATEGORIES` in `src/types/models.ts`) tags every event claim. `TransactionForm` auto-prefills the description (`Food@`, `Transport@`) whenever the category is food/transport's current value, including on initial mount (since "Food" is the default and never fires a `<select>` change event on its own). This prefill is implemented as a plain `useEffect` that calls `setDescription(literal)` directly — **do not** move the "should I overwrite?" gating logic inside a `setState` functional updater; a prior version mutated a ref inside the updater and broke under React Strict Mode's dev-only double-invocation of updater functions (the second invocation saw the ref already mutated by the first, so it silently no-op'd). The gating flag (`autoFillActiveRef`) is mutated only from the description `<input>`'s `onChange` and from the effect body itself, never from inside a state updater.
+- **Routing**: a hand-rolled hash router (`src/hooks/useHashRoute.ts`) drives navigation, no `react-router-dom`. Routes are a typed discriminated union (`Route`) — add new screens there and in `App.tsx`'s switch, not via a new routing mechanism.
+- **Navigation is one config, two renderings**: `src/components/layout/navItems.ts` is the single list of nav destinations; `BottomNav.tsx` (mobile, `md:hidden`) and `Sidebar.tsx` (desktop, `hidden md:flex`) both render it. Add a new top-level section there, not by hand-editing both nav components.
+- **Desktop and mobile intentionally diverge past a single wider column** — this was a direct fix for the app looking like a stretched mobile page on desktop. `AppShell` offsets content by the sidebar width (`md:pl-64`) instead of just widening a centered column; `Dashboard`'s event grid, `EventDetail`'s info+actions sidebar next to the table, `GeneralExpenses`'s picker+summary sidebar, and `Analytics`'s side-by-side charts all switch layout at `lg:`, not just resize. When adding a new page, ask whether desktop should get a genuinely different arrangement (columns, sidebar) rather than a wider single stack.
+- **Theme**: `useTheme()` (`src/hooks/useTheme.ts`) toggles a `dark` class on `<html>`, persisted via `AppSettings.theme` in the same localStorage settings key (defaults to the OS preference on first run). Tailwind's `dark:` variant is redefined in `styles/index.css` via `@custom-variant dark` rather than left at the default `prefers-color-scheme` media query, specifically so the toggle can override the OS setting. Every page/component should carry `dark:` variants — there is no "just the shell is dark" half-state; if you add a new component with colored backgrounds/borders/text, give it `dark:` classes in the same edit, not as a follow-up.
+- **No global state library**: each hook in `src/hooks/` (`useEvents`, `useEvent`, `useMonthlyActivity`, `useAnalytics`, `usePhotoUrl`) fetches via the repositories into local component state and exposes a `refresh()` used after mutations. This is intentional for an app this size — don't introduce Redux/Zustand/React Query unless the app's scope grows substantially.
+- **Analytics granularity is a config map, not a hardcoded set of screens**: `GRANULARITY_CONFIG` in `src/lib/analytics.ts` maps each `Granularity` ('week'/'month'/'year') to its trend-chart bucket count; adding a new granularity is one config entry plus one `case` in each of `periodKey`/`periodStart`/`periodEnd`/`periodLabel` — the UI (`PeriodFilter`, `Analytics.tsx`) needs no changes. Week-granularity short labels are always a *range* ("13–19 Jul"), never a bare start date — a bare date reads as "data happened on this exact day," which misled a real user when a transaction landed mid-week. The trend chart's active-period readout uses `PeriodBucket.longLabel` (the full range), not `label` (the compact axis form) — don't collapse them back into one field.
+- **Chart colors are validated, not eyeballed**: `--series-personal`/`--series-company` and `--cat-1..7` in `styles/index.css` come from the dataviz skill's categorical palette, checked with `validate_palette.js` for CVD-safe adjacent contrast in both light and dark. If you add a new chart series or category color, validate the new pairing the same way before picking a hex.
+- **Amounts are always positive** in stored data. Don't store negative amounts.
+- **Photo lifecycle**: every `Transaction.photoId` should have a matching `photos` store record, and deleting a transaction or event must also delete its photo(s) — see the cascade-delete logic in `eventsRepo.deleteEvent()` and `transactionsRepo.deleteTransaction()`. If you add new delete paths, preserve this invariant.
+
+## Conventions
+
+- Files: PascalCase for components/pages (`BalanceTable.tsx`), camelCase for hooks/lib/repos (`useEvent.ts`, `balance.ts`).
+- Components/pages are function components with named exports (no default exports except `App.tsx`/`main.tsx`, which Vite's template already set up that way).
+- Tailwind utility classes directly in JSX; the only handwritten CSS is `src/styles/print.css` (claim-sheet-exact print rules, including forced `print-color-adjust: exact` on the black/peach header block and red negative-balance text) and the Tailwind import in `src/styles/index.css`.
+- Currency inputs use `inputMode="decimal"` text inputs (`CurrencyInput.tsx`), not `type="number"` — avoids spinner UI and locale decimal-separator issues.
+- Print/CSV column labels ("Ref. No.", "Total:", "Allowance received" starting row, "Name Claim:"/"Tujuan:"/"Tarikh:" header) intentionally match the wording in the company's paper claim sheet — don't casually rename these, they exist so the printed output lines up with the real template.
+
+## Directories outside `src/`
+
+- `skills/` — placeholder for project-local workflow/validation scripts; empty for now.
+- `creative/icons/`, `creative/brand/` — brand assets, icon sources, design reference material.
+- `screenshot/` — drop UI screenshots here when visually verifying a change.
+
+## Known non-goals
+
+- No multi-user auth, no cloud sync, no OCR/AI receipt scanning, no Google Sheets/API integration — all explicitly out of scope per the product brief. Print and CSV export are the only export paths; don't add a clipboard/Sheets copy feature without an explicit request (one was built and then deliberately removed).
+- No offline service worker / installable PWA manifest yet — the app works offline by virtue of having no network dependency, but hasn't been wired up as an installable PWA. Treat as a possible future enhancement, not a bug.

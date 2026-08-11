@@ -1,0 +1,73 @@
+@import "tailwindcss";
+@import "./print.css";
+
+/* .force-light scopes a subtree (the print preview) to always render light,
+   regardless of the app's dark mode toggle — used so the "paper" preview
+   never lies about what will actually print. */
+@custom-variant dark (&:where(.dark, .dark *):not(:where(.force-light, .force-light *)));
+
+/* color-scheme is a normal inherited CSS property — excluding dark: utilities
+   above does NOT stop it cascading into .force-light. Two things went wrong
+   here in practice: (1) with no explicit `color` on <html>, a `dark`
+   color-scheme makes the browser resolve unstyled text to white *at the
+   root*, and (2) that resolved white then inherits normally into
+   .force-light regardless of resetting color-scheme there, since
+   color-scheme only affects how an element resolves ITS OWN system-color
+   defaults, not values already inherited from an ancestor. Fixed by giving
+   html an explicit color in both modes (no more implicit default to rely
+   on) AND giving .force-light its own explicit color to break the
+   inheritance chain from a dark ancestor. */
+.force-light {
+  color-scheme: light;
+  color: #0f172a;
+}
+
+:root {
+  color-scheme: light;
+  color: #0f172a;
+  --chart-surface: #fcfcfb;
+  --chart-text-primary: #0b0b0b;
+  --chart-text-secondary: #52514e;
+  --chart-muted: #898781;
+  --chart-grid: #e1e0d9;
+  --chart-baseline: #c3c2b7;
+
+  /* Personal vs Company Allowance (2-series categorical, validated pair) */
+  --series-personal: #2a78d6;
+  --series-company: #1baf7a;
+
+  /* Category breakdown (up to 7, fixed categorical order, validated adjacent) */
+  --cat-1: #2a78d6;
+  --cat-2: #eb6834;
+  --cat-3: #1baf7a;
+  --cat-4: #eda100;
+  --cat-5: #e87ba4;
+  --cat-6: #008300;
+  --cat-7: #4a3aa7;
+}
+
+.dark {
+  color-scheme: dark;
+  color: #f1f5f9;
+  --chart-surface: #1a1a19;
+  --chart-text-primary: #ffffff;
+  --chart-text-secondary: #c3c2b7;
+  --chart-muted: #898781;
+  --chart-grid: #2c2c2a;
+  --chart-baseline: #383835;
+
+  --series-personal: #3987e5;
+  --series-company: #199e70;
+
+  --cat-1: #3987e5;
+  --cat-2: #d95926;
+  --cat-3: #199e70;
+  --cat-4: #c98500;
+  --cat-5: #d55181;
+  --cat-6: #008300;
+  --cat-7: #9085e9;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+}
