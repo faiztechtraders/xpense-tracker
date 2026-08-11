@@ -102,71 +102,77 @@ export function TrendBarChart({ data, periodNoun }: TrendBarChartProps) {
             </div>
           </div>
 
+          <p className="mt-3 text-xs text-slate-400 sm:hidden dark:text-slate-500">↔ Swipe the chart sideways to see all {data.length} {periodNoun}</p>
+
           <div
-            className="mt-4 flex gap-4"
+            className="mt-2 flex gap-2 sm:mt-4 sm:gap-4"
             onMouseLeave={() => setActiveIndex(data.length - 1)}
           >
-            {/* Y-axis labels */}
+            {/* Y-axis labels — fixed outside the horizontal scroll below */}
             <div className="flex shrink-0 flex-col justify-between text-right text-[10px] text-slate-400 dark:text-slate-500" style={{ height: PLOT_HEIGHT }}>
               {[...gridSteps].reverse().map((step) => (
                 <span key={step}>{formatAxisRM(max * step)}</span>
               ))}
             </div>
 
-            {/* Plot area */}
-            <div className="relative flex-1">
-              <div className="absolute inset-0 flex flex-col justify-between" style={{ height: PLOT_HEIGHT }} aria-hidden="true">
-                {gridSteps.map((step) => (
-                  <div key={step} className="border-t border-slate-100 dark:border-slate-800" />
-                ))}
-              </div>
+            {/* Plot area — scrolls horizontally on narrow screens instead of overflowing the
+                card or squeezing labels (like "22–28 Jun") into illegible/overlapping text.
+                A minimum per-column width guarantees every label has room to render cleanly. */}
+            <div className="min-w-0 flex-1 overflow-x-auto">
+              <div className="relative" style={{ minWidth: Math.max(data.length * 44, 100) }}>
+                <div className="absolute inset-0 flex flex-col justify-between" style={{ height: PLOT_HEIGHT }} aria-hidden="true">
+                  {gridSteps.map((step) => (
+                    <div key={step} className="border-t border-slate-100 dark:border-slate-800" />
+                  ))}
+                </div>
 
-              <div className="relative flex items-end justify-between gap-1" style={{ height: PLOT_HEIGHT }}>
-                {data.map((d, i) => {
-                  const isActive = i === activeIndex;
-                  return (
-                    <button
-                      key={d.key}
-                      type="button"
-                      onMouseEnter={() => setActiveIndex(i)}
-                      onFocus={() => setActiveIndex(i)}
-                      aria-label={`${d.longLabel}: Personal ${formatRM(d.personal)}, Company ${formatRM(d.company)}, Total ${formatRM(d.total)}`}
-                      className="group flex flex-1 flex-col items-center focus-visible:outline-none"
-                    >
-                      {/* Fixed-height track matching the gridlines exactly — the label lives
-                          outside this box so it never perturbs the bars' baseline alignment.
-                          Personal and Company render as separate side-by-side bars (not
-                          stacked) so each bar's own height reads directly against the axis. */}
-                      <div className="flex w-full items-end justify-center gap-[3px]" style={{ height: PLOT_HEIGHT }}>
-                        {d.total === 0 ? (
-                          <div className="h-[2px] w-full max-w-7 rounded-full bg-slate-200 dark:bg-slate-700" />
-                        ) : (
-                          <>
-                            <div
-                              className={`w-3 rounded-t-[4px] transition-opacity ${isActive ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}`}
-                              style={{
-                                height: d.personal > 0 ? `${Math.max((d.personal / max) * 100, 1)}%` : 0,
-                                backgroundColor: 'var(--series-personal)',
-                              }}
-                            />
-                            <div
-                              className={`w-3 rounded-t-[4px] transition-opacity ${isActive ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}`}
-                              style={{
-                                height: d.company > 0 ? `${Math.max((d.company / max) * 100, 1)}%` : 0,
-                                backgroundColor: 'var(--series-company)',
-                              }}
-                            />
-                          </>
-                        )}
-                      </div>
-                      <span
-                        className={`mt-2 whitespace-nowrap text-[10px] ${isActive ? 'font-semibold text-slate-900 dark:text-slate-50' : 'text-slate-400 dark:text-slate-500'}`}
+                <div className="relative flex items-end justify-between gap-1" style={{ height: PLOT_HEIGHT }}>
+                  {data.map((d, i) => {
+                    const isActive = i === activeIndex;
+                    return (
+                      <button
+                        key={d.key}
+                        type="button"
+                        onMouseEnter={() => setActiveIndex(i)}
+                        onFocus={() => setActiveIndex(i)}
+                        aria-label={`${d.longLabel}: Personal ${formatRM(d.personal)}, Company ${formatRM(d.company)}, Total ${formatRM(d.total)}`}
+                        className="group flex flex-1 flex-col items-center focus-visible:outline-none"
                       >
-                        {d.label}
-                      </span>
-                    </button>
-                  );
-                })}
+                        {/* Fixed-height track matching the gridlines exactly — the label lives
+                            outside this box so it never perturbs the bars' baseline alignment.
+                            Personal and Company render as separate side-by-side bars (not
+                            stacked) so each bar's own height reads directly against the axis. */}
+                        <div className="flex w-full items-end justify-center gap-[3px]" style={{ height: PLOT_HEIGHT }}>
+                          {d.total === 0 ? (
+                            <div className="h-[2px] w-full max-w-7 rounded-full bg-slate-200 dark:bg-slate-700" />
+                          ) : (
+                            <>
+                              <div
+                                className={`w-3 rounded-t-[4px] transition-opacity ${isActive ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}`}
+                                style={{
+                                  height: d.personal > 0 ? `${Math.max((d.personal / max) * 100, 1)}%` : 0,
+                                  backgroundColor: 'var(--series-personal)',
+                                }}
+                              />
+                              <div
+                                className={`w-3 rounded-t-[4px] transition-opacity ${isActive ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}`}
+                                style={{
+                                  height: d.company > 0 ? `${Math.max((d.company / max) * 100, 1)}%` : 0,
+                                  backgroundColor: 'var(--series-company)',
+                                }}
+                              />
+                            </>
+                          )}
+                        </div>
+                        <span
+                          className={`mt-2 whitespace-nowrap text-[10px] ${isActive ? 'font-semibold text-slate-900 dark:text-slate-50' : 'text-slate-400 dark:text-slate-500'}`}
+                        >
+                          {d.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
