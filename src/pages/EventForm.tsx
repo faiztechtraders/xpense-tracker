@@ -95,7 +95,7 @@ export function EventForm({ eventId, route, navigate, back }: EventFormProps) {
             id="purpose"
             value={purpose}
             onChange={(e) => setPurpose(e.target.value)}
-            placeholder="Attend investment seminar"
+            placeholder="Organise investment seminar"
             className={inputClasses}
           />
         </div>
