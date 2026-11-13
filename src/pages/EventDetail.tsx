@@ -78,10 +78,6 @@ export function EventDetail({ route, eventId, navigate, back }: EventDetailProps
                 <dd className="min-w-0 text-right font-medium text-slate-900 dark:text-slate-100">{event.claimantName || '—'}</dd>
               </div>
               <div className="flex justify-between gap-3">
-                <dt className="shrink-0 text-slate-500 dark:text-slate-400">Tujuan</dt>
-                <dd className="min-w-0 text-right font-medium text-slate-900 dark:text-slate-100">{event.purpose || '—'}</dd>
-              </div>
-              <div className="flex justify-between gap-3">
                 <dt className="shrink-0 text-slate-500 dark:text-slate-400">Tarikh</dt>
                 <dd className="min-w-0 text-right font-medium text-slate-900 dark:text-slate-100">
                   {formatDateDisplay(event.startDate)}

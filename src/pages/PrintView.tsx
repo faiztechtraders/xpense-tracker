@@ -64,7 +64,7 @@ export function PrintView({ route, eventId, navigate, back }: PrintViewProps) {
           </div>
           <div className="flex flex-1 flex-col divide-y divide-slate-900 bg-orange-100">
             <span className="px-2 py-1.5 sm:px-3">{event.claimantName || ' '}</span>
-            <span className="px-2 py-1.5 sm:px-3">{event.purpose || ' '}</span>
+            <span className="px-2 py-1.5 sm:px-3">{event.purpose || event.name}</span>
             <span className="px-2 py-1.5 sm:px-3">
               {formatDateDisplay(event.startDate)}
               {event.endDate ? ` – ${formatDateDisplay(event.endDate)}` : ''}

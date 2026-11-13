@@ -26,7 +26,6 @@ export function EventForm({ eventId, route, navigate, back }: EventFormProps) {
   const existing = eventId ? events.find((e) => e.id === eventId) : undefined;
 
   const [name, setName] = useState('');
-  const [purpose, setPurpose] = useState('');
   const [claimantName, setClaimantName] = useState('');
   const [startDate, setStartDate] = useState(todayISO());
   const [endDate, setEndDate] = useState('');
@@ -35,7 +34,6 @@ export function EventForm({ eventId, route, navigate, back }: EventFormProps) {
   useEffect(() => {
     if (existing) {
       setName(existing.name);
-      setPurpose(existing.purpose);
       setClaimantName(existing.claimantName);
       setStartDate(existing.startDate);
       setEndDate(existing.endDate ?? '');
@@ -49,7 +47,6 @@ export function EventForm({ eventId, route, navigate, back }: EventFormProps) {
     e.preventDefault();
     const input = {
       name: name.trim(),
-      purpose: purpose.trim(),
       claimantName: claimantName.trim(),
       startDate,
       endDate: endDate || undefined,
@@ -83,19 +80,6 @@ export function EventForm({ eventId, route, navigate, back }: EventFormProps) {
             onChange={(e) => setName(e.target.value)}
             placeholder="Seminar Xpress Saham"
             required
-            className={inputClasses}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="purpose" className={labelClasses}>
-            Tujuan (Purpose)
-          </label>
-          <input
-            id="purpose"
-            value={purpose}
-            onChange={(e) => setPurpose(e.target.value)}
-            placeholder="Organise investment seminar"
             className={inputClasses}
           />
         </div>

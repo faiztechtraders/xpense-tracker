@@ -96,7 +96,6 @@ export function Dashboard({ route, navigate }: DashboardProps) {
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold text-slate-900 dark:text-slate-100">{event.name}</p>
-                <p className="truncate text-sm text-slate-500 dark:text-slate-400">{event.purpose}</p>
                 <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                   {formatDateDisplay(event.startDate)}
                   {event.endDate ? ` – ${formatDateDisplay(event.endDate)}` : ''}

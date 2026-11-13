@@ -3,7 +3,9 @@ export type ID = string;
 export interface TravelEvent {
   id: ID;
   name: string;
-  purpose: string;
+  /** Legacy: no longer collected (the event name covers it). Kept so older events'
+   *  values still print on the claim sheet's "Tujuan:" line. */
+  purpose?: string;
   claimantName: string;
   startDate: string;
   endDate?: string;

@@ -4,7 +4,7 @@ import type { TravelEvent, ID } from '../../types/models';
 
 export type NewEventInput = Pick<
   TravelEvent,
-  'name' | 'purpose' | 'claimantName' | 'startDate' | 'endDate' | 'allowanceBudget'
+  'name' | 'claimantName' | 'startDate' | 'endDate' | 'allowanceBudget'
 >;
 
 export async function listEvents(): Promise<TravelEvent[]> {
