@@ -74,7 +74,7 @@ export function EventDetail({ route, eventId, navigate, back }: EventDetailProps
             </div>
             <dl className="mt-3 grid grid-cols-1 gap-1.5 text-sm">
               <div className="flex justify-between gap-3">
-                <dt className="shrink-0 text-slate-500 dark:text-slate-400">Name Claim</dt>
+                <dt className="shrink-0 text-slate-500 dark:text-slate-400">Name</dt>
                 <dd className="min-w-0 text-right font-medium text-slate-900 dark:text-slate-100">{event.claimantName || '—'}</dd>
               </div>
               <div className="flex justify-between gap-3">

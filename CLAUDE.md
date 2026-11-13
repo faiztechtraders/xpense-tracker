@@ -46,7 +46,7 @@ Run `npm run build` and `npm run lint` after any non-trivial change.
 - Tailwind utility classes directly in JSX; the only handwritten CSS is `src/styles/print.css` (claim-sheet-exact print rules, including forced `print-color-adjust: exact` on the black/peach header block and red negative-balance text) and the Tailwind import in `src/styles/index.css`.
 - Date inputs use `DateField.tsx` (custom calendar: bottom sheet on phones, centered dialog from `sm:`), not `<input type="date">` — the native popup can't be restyled or enlarged and was too small to tap comfortably. Values stay plain `YYYY-MM-DD` strings; use `optional` for clearable fields and `min` to bound ranges (e.g. end date ≥ start date).
 - Currency inputs use `inputMode="decimal"` text inputs (`CurrencyInput.tsx`), not `type="number"` — avoids spinner UI and locale decimal-separator issues.
-- Print/CSV column labels ("Ref. No.", "Total:", "Allowance received" starting row, "Name Claim:"/"Tujuan:"/"Tarikh:" header) intentionally match the wording in the company's paper claim sheet — don't casually rename these, they exist so the printed output lines up with the real template.
+- Print/CSV column labels ("Ref. No.", "Total:", "Allowance received" starting row, "Tujuan:"/"Tarikh:" header) follow the company's paper claim sheet — don't casually rename these. Exception: the user asked for the claimant row to read "Name:" (and "Your Name" on the form) instead of the sheet's "Name Claim:", since the official form is filled in separately anyway.
 
 ## Directories outside `src/`
 

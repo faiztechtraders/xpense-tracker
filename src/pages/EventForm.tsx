@@ -86,7 +86,7 @@ export function EventForm({ eventId, route, navigate, back }: EventFormProps) {
 
         <div>
           <label htmlFor="claimant" className={labelClasses}>
-            Name Claim
+            Your Name
           </label>
           <input
             id="claimant"

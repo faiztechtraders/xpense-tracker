@@ -58,7 +58,7 @@ export function PrintView({ route, eventId, navigate, back }: PrintViewProps) {
 
         <div className="claim-header mt-4 flex overflow-hidden rounded-md border border-slate-900 text-sm">
           <div className="flex flex-col divide-y divide-slate-900 bg-slate-900 text-white">
-            <span className="px-2 py-1.5 font-semibold whitespace-nowrap sm:px-3">Name Claim:</span>
+            <span className="px-2 py-1.5 font-semibold whitespace-nowrap sm:px-3">Name:</span>
             <span className="px-2 py-1.5 font-semibold whitespace-nowrap sm:px-3">Tujuan:</span>
             <span className="px-2 py-1.5 font-semibold whitespace-nowrap sm:px-3">Tarikh:</span>
           </div>
