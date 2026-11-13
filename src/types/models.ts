@@ -30,7 +30,7 @@ interface TransactionBase {
 
 export const CLAIM_CATEGORIES = [
   { value: 'food', label: 'Food' },
-  { value: 'transport', label: 'Transport (Gas & Toll)' },
+  { value: 'transport', label: 'Transport' },
 ] as const;
 
 export type ClaimCategory = (typeof CLAIM_CATEGORIES)[number]['value'];

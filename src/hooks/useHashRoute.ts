@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ID } from '../types/models';
 
 export type Route =
-  | { name: 'dashboard' }
+  | { name: 'dashboard'; archived?: boolean }
   | { name: 'event-detail'; eventId: ID }
   | { name: 'event-form'; eventId?: ID }
   | { name: 'transaction-form'; eventId: ID; transactionId?: ID }
@@ -30,6 +30,8 @@ function parseHash(hash: string): Route {
       return { name: 'general-expenses' };
     case 'analytics':
       return { name: 'analytics' };
+    case 'archived':
+      return { name: 'dashboard', archived: true };
     default:
       return { name: 'dashboard' };
   }
@@ -38,7 +40,7 @@ function parseHash(hash: string): Route {
 function routeToHash(route: Route): string {
   switch (route.name) {
     case 'dashboard':
-      return '#/';
+      return route.archived ? '#/archived' : '#/';
     case 'event-detail':
       return `#/event/${route.eventId}`;
     case 'event-form':

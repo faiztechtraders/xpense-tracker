@@ -3,6 +3,7 @@ import { BalanceTable } from '../components/BalanceTable';
 import { EmptyState } from '../components/EmptyState';
 import { Money } from '../components/Money';
 import { useEvent } from '../hooks/useEvent';
+import { useToast } from '../hooks/useToast';
 import { saveSettings } from '../db/repositories/settingsRepo';
 import { formatDateDisplay, formatRM } from '../lib/date';
 import { balanceRowsToCsv, downloadCsv, eventCsvFilename } from '../lib/csv';
@@ -17,7 +18,8 @@ interface EventDetailProps {
 }
 
 export function EventDetail({ route, eventId, navigate, back }: EventDetailProps) {
-  const { event, balance, loading } = useEvent(eventId);
+  const { event, balance, loading, setArchived } = useEvent(eventId);
+  const toast = useToast();
 
   if (loading || !event || !balance) {
     return (
@@ -37,6 +39,17 @@ export function EventDetail({ route, eventId, navigate, back }: EventDetailProps
     downloadCsv(eventCsvFilename(event), csv);
   };
 
+  const handleToggleArchive = async () => {
+    if (event.archived) {
+      await setArchived(false);
+      toast.show('Event restored to active');
+    } else {
+      await setArchived(true);
+      toast.show('Event archived');
+      navigate({ name: 'dashboard' });
+    }
+  };
+
   return (
     <AppShell title={event.name} route={route} navigate={navigate} onBack={back}>
       {/* Stacked on mobile/tablet; on large screens the info+actions form a sticky
@@ -46,6 +59,11 @@ export function EventDetail({ route, eventId, navigate, back }: EventDetailProps
           <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
             <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
               <div>
+                {event.archived && (
+                  <span className="mb-1.5 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    Archived
+                  </span>
+                )}
                 <p className="text-xs font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">Balance Claim</p>
                 <Money amount={balance.totals.finalBalance} bold className="text-3xl" />
               </div>
@@ -96,6 +114,14 @@ export function EventDetail({ route, eventId, navigate, back }: EventDetailProps
               ⬇️ Export CSV
             </button>
           </div>
+
+          <button
+            type="button"
+            onClick={handleToggleArchive}
+            className="mt-2 min-h-11 w-full rounded-xl text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 lg:mt-0 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          >
+            {event.archived ? '↩️ Unarchive event' : '🗄️ Archive event'}
+          </button>
         </div>
 
         <div className="mt-4 lg:col-span-2 lg:mt-0">

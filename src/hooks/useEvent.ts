@@ -43,5 +43,14 @@ export function useEvent(eventId: ID | undefined) {
     [refresh]
   );
 
-  return { event, transactions, balance, loading, refresh, deleteTransaction };
+  const setArchived = useCallback(
+    async (archived: boolean) => {
+      if (!eventId) return;
+      await eventsRepo.archiveEvent(eventId, archived);
+      await refresh();
+    },
+    [eventId, refresh]
+  );
+
+  return { event, transactions, balance, loading, refresh, deleteTransaction, setArchived };
 }

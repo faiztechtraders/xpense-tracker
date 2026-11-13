@@ -13,7 +13,18 @@ interface DashboardProps {
 
 export function Dashboard({ route, navigate }: DashboardProps) {
   const { events, transactionsByEvent, loading } = useEvents();
+  const showArchived = route.name === 'dashboard' && route.archived === true;
   const activeEvents = events.filter((e) => !e.archived);
+  const archivedEvents = events.filter((e) => e.archived);
+  const visibleEvents = showArchived ? archivedEvents : activeEvents;
+
+  const tabClasses = (selected: boolean) =>
+    [
+      'min-h-9 flex-1 rounded-lg px-3 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 sm:flex-none',
+      selected
+        ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-50'
+        : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200',
+    ].join(' ');
 
   return (
     <AppShell title="ClaimTrack" route={route} navigate={navigate}>
@@ -28,21 +39,53 @@ export function Dashboard({ route, navigate }: DashboardProps) {
         </button>
       </div>
 
+      <div
+        role="tablist"
+        aria-label="Event status"
+        className="mt-3 flex gap-1 rounded-xl bg-slate-100 p-1 sm:inline-flex dark:bg-slate-800/70"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={!showArchived}
+          onClick={() => navigate({ name: 'dashboard' })}
+          className={tabClasses(!showArchived)}
+        >
+          Active ({activeEvents.length})
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={showArchived}
+          onClick={() => navigate({ name: 'dashboard', archived: true })}
+          className={tabClasses(showArchived)}
+        >
+          Archived ({archivedEvents.length})
+        </button>
+      </div>
+
       {/* auto-fit (not a fixed column count) so a lone card stretches to use the
           available row width instead of being squeezed into one of several empty
           tracks — the bug this fixed: a 1-event dashboard on a wide screen showed
           a cramped, truncated card next to a large expanse of unused space. */}
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
         {loading && <p className="text-sm text-slate-400 dark:text-slate-500">Loading…</p>}
-        {!loading && activeEvents.length === 0 && (
+        {!loading && visibleEvents.length === 0 && (
           <div>
-            <EmptyState
-              title="No events yet"
-              description="Create an event to start tracking a travel or seminar allowance."
-            />
+            {showArchived ? (
+              <EmptyState
+                title="No archived events"
+                description="Archive a finished event from its detail page to move it here."
+              />
+            ) : (
+              <EmptyState
+                title={archivedEvents.length > 0 ? 'No active events' : 'No events yet'}
+                description="Create an event to start tracking a travel or seminar allowance."
+              />
+            )}
           </div>
         )}
-        {activeEvents.map((event) => {
+        {visibleEvents.map((event) => {
           const { totals } = computeEventBalance(event, transactionsByEvent.get(event.id) ?? []);
           return (
             <button

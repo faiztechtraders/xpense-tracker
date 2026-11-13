@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AppShell } from '../components/layout/AppShell';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { CurrencyInput } from '../components/CurrencyInput';
@@ -22,11 +22,6 @@ interface TransactionFormProps {
   onSaved: () => void;
 }
 
-const CLAIM_DESCRIPTION_PREFIX: Record<ClaimCategory, string> = {
-  food: 'Food@',
-  transport: 'Transport@',
-};
-
 const fieldClasses =
   'w-full min-h-11 rounded-xl border border-slate-300 bg-white px-4 text-base text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-teal-500';
 const dateFieldClasses = `${fieldClasses} dark:[color-scheme:dark]`;
@@ -47,24 +42,10 @@ export function TransactionForm({ route, kind, eventId, transactionId, navigate,
   const [confirmDelete, setConfirmDelete] = useState(false);
   const existingPhotoUrl = usePhotoUrl(existing?.photoId);
 
-  // Whether the description field is still "auto-managed" by the category prefill below.
-  // Flips to false the moment the user (or a fill event) touches the field directly, so we
-  // never clobber text they've typed. Mutated only from the input's onChange and from the
-  // effect body itself (never from inside a setState updater — see git history for why that's
-  // unsafe under React Strict Mode's double-invocation of updater functions).
-  const autoFillActiveRef = useRef(true);
-
-  useEffect(() => {
-    if (transactionId || kind !== 'event') return;
-    if (!autoFillActiveRef.current) return;
-    setDescription(CLAIM_DESCRIPTION_PREFIX[claimCategory]);
-  }, [claimCategory, kind, transactionId]);
-
   useEffect(() => {
     if (!transactionId) return;
     transactionsRepo.getTransaction(transactionId).then((t) => {
       if (!t) return;
-      autoFillActiveRef.current = false;
       setExisting(t);
       setDate(t.date);
       setRefNo(t.refNo);
@@ -179,9 +160,6 @@ export function TransactionForm({ route, kind, eventId, transactionId, navigate,
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-              Food is the default allowance. Transport (gas &amp; toll) applies only if you're an approved driver.
-            </p>
           </div>
         )}
 
@@ -219,10 +197,7 @@ export function TransactionForm({ route, kind, eventId, transactionId, navigate,
           <input
             id="description"
             value={description}
-            onChange={(e) => {
-              autoFillActiveRef.current = false;
-              setDescription(e.target.value);
-            }}
+            onChange={(e) => setDescription(e.target.value)}
             placeholder={kind === 'event' ? 'Food@R&R Gurun' : 'Taxi to venue'}
             autoFocus
             required
