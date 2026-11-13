@@ -9,11 +9,16 @@ interface SidebarProps {
 export function Sidebar({ route, navigate }: SidebarProps) {
   return (
     <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col border-r border-slate-200 bg-white print:hidden md:flex dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex items-center gap-2 px-6 py-5">
-        <span className="text-xl" aria-hidden="true">
-          💳
-        </span>
-        <span className="text-lg font-semibold text-slate-900 dark:text-slate-50">ClaimTrack</span>
+      <div className="px-4 py-3">
+        <button
+          type="button"
+          onClick={() => navigate({ name: 'dashboard' })}
+          aria-label="ClaimTrack home"
+          className="flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 dark:hover:bg-slate-800"
+        >
+          <img src="/favicon.svg" alt="" className="h-7 w-7 shrink-0" />
+          <span className="text-lg font-semibold text-slate-900 dark:text-slate-50">ClaimTrack</span>
+        </button>
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 px-4">

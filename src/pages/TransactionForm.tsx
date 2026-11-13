@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AppShell } from '../components/layout/AppShell';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { CurrencyInput } from '../components/CurrencyInput';
+import { DateField } from '../components/DateField';
 import { PhotoInput } from '../components/PhotoInput';
 import { useToast } from '../hooks/useToast';
 import { usePhotoUrl } from '../hooks/usePhotoUrl';
@@ -24,7 +25,6 @@ interface TransactionFormProps {
 
 const fieldClasses =
   'w-full min-h-11 rounded-xl border border-slate-300 bg-white px-4 text-base text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-teal-500';
-const dateFieldClasses = `${fieldClasses} dark:[color-scheme:dark]`;
 const labelClasses = 'mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300';
 
 export function TransactionForm({ route, kind, eventId, transactionId, navigate, back, onSaved }: TransactionFormProps) {
@@ -167,14 +167,7 @@ export function TransactionForm({ route, kind, eventId, transactionId, navigate,
           <label htmlFor="date" className={labelClasses}>
             Date
           </label>
-          <input
-            id="date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-            className={dateFieldClasses}
-          />
+          <DateField id="date" value={date} onChange={setDate} className="px-4" />
         </div>
 
         <div>

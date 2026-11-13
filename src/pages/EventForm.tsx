@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AppShell } from '../components/layout/AppShell';
 import { CurrencyInput } from '../components/CurrencyInput';
+import { DateField } from '../components/DateField';
 import { useEvents } from '../hooks/useEvents';
 import { getSettings, saveSettings } from '../db/repositories/settingsRepo';
 import { todayISO } from '../lib/date';
@@ -17,7 +18,6 @@ interface EventFormProps {
 const baseInputClasses =
   'w-full min-h-11 rounded-xl border border-slate-300 bg-white text-base text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-teal-500';
 const inputClasses = `${baseInputClasses} px-4`;
-const compactInputClasses = `${baseInputClasses} px-3 dark:[color-scheme:dark]`;
 const labelClasses = 'mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300';
 
 export function EventForm({ eventId, route, navigate, back }: EventFormProps) {
@@ -118,25 +118,27 @@ export function EventForm({ eventId, route, navigate, back }: EventFormProps) {
             <label htmlFor="startDate" className={labelClasses}>
               Tarikh Mula
             </label>
-            <input
+            <DateField
               id="startDate"
-              type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
-              className={compactInputClasses}
+              onChange={(v) => {
+                setStartDate(v);
+                // An end date before the new start date is no longer valid — drop it.
+                if (endDate && endDate < v) setEndDate('');
+              }}
             />
           </div>
           <div>
             <label htmlFor="endDate" className={labelClasses}>
               Tarikh Akhir (optional)
             </label>
-            <input
+            <DateField
               id="endDate"
-              type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className={compactInputClasses}
+              onChange={setEndDate}
+              optional
+              min={startDate}
+              placeholder="No end date"
             />
           </div>
         </div>
